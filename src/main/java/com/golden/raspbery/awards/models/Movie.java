@@ -2,6 +2,7 @@ package com.golden.raspbery.awards.models;
 
 import java.util.Set;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -22,24 +23,24 @@ public class Movie {
 	@Column(name = "TITLE",nullable = false)
 	private String title;
 
-	@Column(name = "YEAR",nullable = false)
-	private Integer yearNominated;
+	@Column(name = "YEAR_NOMINATED",nullable = false)
+	private Integer year;
 
 	@Column(name = "WINNER",nullable = false)
 	private Boolean isWinner;
 
-	@ManyToMany
+	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	@JoinTable(
 		name = "MOVIE_PRODUCERS",
 		joinColumns = @JoinColumn(name = "MOVIE_ID"),
 		inverseJoinColumns = @JoinColumn(name = "PRODUCER_ID"))
 	private Set<Producer> producersSet;
 
-	@ManyToMany
+	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
 	@JoinTable(
-		name = "MOVIE_STUDIOS",
-		joinColumns = @JoinColumn(name = "MOVIE_ID"),
-		inverseJoinColumns = @JoinColumn(name = "STUDIO_ID"))
+			name = "MOVIE_STUDIOS",
+			joinColumns = @JoinColumn(name = "MOVIE_ID"),
+			inverseJoinColumns = @JoinColumn(name = "STUDIO_ID"))
 	private Set<Studio> studiosSet;
 
 	public Long getId() {
@@ -58,12 +59,12 @@ public class Movie {
 		this.title = title;
 	}
 
-	public Integer getYearNominated() {
-		return yearNominated;
+	public Integer getYear() {
+		return year;
 	}
 
-	public void setYearNominated(Integer yearNominated) {
-		this.yearNominated = yearNominated;
+	public void setYear(Integer year) {
+		this.year = year;
 	}
 
 	public Boolean getIsWinner() {

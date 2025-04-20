@@ -18,7 +18,7 @@ public class Studio {
 
 	private String name;
 
-	@ManyToMany(mappedBy = "MOVIE_STUDIOS")
+	@ManyToMany(mappedBy = "studiosSet")
 	private Set<Movie> moviesSet;
 
 	public Long getId() {

@@ -18,7 +18,7 @@ public class Producer {
 
 	private String name;
 
-	@ManyToMany(mappedBy = "MOVIE_PRODUCERS")
+	@ManyToMany(mappedBy = "producersSet")
 	private Set<Movie> moviesSet;
 
 	public Long getId() {
