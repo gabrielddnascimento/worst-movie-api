@@ -35,7 +35,7 @@ public class StudioIT extends TestBase {
 	@Order(1)
 	public void createStudioTest() {
 		StudioDTO studioDTO = new StudioDTO();
-		studioDTO.setName("StudioTest");
+		studioDTO.setName("MovieTest");
 
 		ResponseEntity<StudioDTO> responseEntity = this.testRestTemplate.postForEntity(this.getEndpoint(), studioDTO, StudioDTO.class);
 
