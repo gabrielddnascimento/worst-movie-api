@@ -50,6 +50,22 @@ public class MovieIT extends TestBase {
 
 	@Test
 	@Order(2)
+	public void createSecondWinnerOnTheSameYearTest() {
+		MovieDTO movieDTO = new MovieDTO();
+		movieDTO.setTitle("Nome: O Curta");
+		movieDTO.setYearNominated(1900);
+		movieDTO.setIsWinner(true);
+		movieDTO.setFilmStudios("Alpha Video, Cinemark");
+		movieDTO.setFilmProducers("ProdutorUm, ProdutorDois");
+
+		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.postForEntity(this.getEndpoint(), movieDTO, MovieDTO.class);
+
+		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertNotEquals(movieDTO, responseEntity.getBody());
+	}
+
+	@Test
+	@Order(3)
 	public void listMoviesTest() {
 		ResponseEntity<MovieDTO[]> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(), MovieDTO[].class);
 		MovieDTO[] movieDTOsArray = responseEntity.getBody();
@@ -59,7 +75,7 @@ public class MovieIT extends TestBase {
 	}
 
 	@Test
-	@Order(3)
+	@Order(4)
 	public void findMovieByIdTest() {
 		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(MovieIT.movieDTO.getId()), MovieDTO.class);
 		MovieDTO movieDTO = responseEntity.getBody();
@@ -69,7 +85,7 @@ public class MovieIT extends TestBase {
 	}
 
 	@Test
-	@Order(4)
+	@Order(5)
 	public void editMovieTest() {
 		MovieDTO movieDTO = MovieIT.movieDTO;
 		movieDTO.setTitle("Nome: O Filme 2");
@@ -91,7 +107,7 @@ public class MovieIT extends TestBase {
 	}
 
 	@Test
-	@Order(5)
+	@Order(6)
 	public void deleteMovieTest() {
 		HttpHeaders headers = new HttpHeaders();
 		HttpEntity<Boolean> requestEntity = new HttpEntity<>(headers);
@@ -101,8 +117,8 @@ public class MovieIT extends TestBase {
 	}
 
 	@Test
-	@Order(6)
-	public void getNonExistentStudioTest() {
+	@Order(7)
+	public void getNonExistentMovieTest() {
 		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(MovieIT.movieDTO.getId()), MovieDTO.class);
 
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
