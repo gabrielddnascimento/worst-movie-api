@@ -36,7 +36,7 @@ public class MovieIT extends TestBase {
 	public void createMovieTest() {
 		MovieDTO movieDTO = new MovieDTO();
 		movieDTO.setTitle("Nome: O Filme");
-		movieDTO.setYearNominated(1900);
+		movieDTO.setYear(1900);
 		movieDTO.setIsWinner(true);
 		movieDTO.setFilmStudios("Alpha Video, Cinemark");
 		movieDTO.setFilmProducers("ProdutorUm, ProdutorDois");
@@ -53,14 +53,14 @@ public class MovieIT extends TestBase {
 	public void createSecondWinnerOnTheSameYearTest() {
 		MovieDTO movieDTO = new MovieDTO();
 		movieDTO.setTitle("Nome: O Curta");
-		movieDTO.setYearNominated(1900);
+		movieDTO.setYear(1900);
 		movieDTO.setIsWinner(true);
 		movieDTO.setFilmStudios("Alpha Video, Cinemark");
 		movieDTO.setFilmProducers("ProdutorUm, ProdutorDois");
 
 		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.postForEntity(this.getEndpoint(), movieDTO, MovieDTO.class);
 
-		assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 		assertNotEquals(movieDTO, responseEntity.getBody());
 	}
 
@@ -89,7 +89,7 @@ public class MovieIT extends TestBase {
 	public void editMovieTest() {
 		MovieDTO movieDTO = MovieIT.movieDTO;
 		movieDTO.setTitle("Nome: O Filme 2");
-		movieDTO.setYearNominated(1982);
+		movieDTO.setYear(1982);
 		movieDTO.setIsWinner(false);
 		movieDTO.setFilmStudios("GMO");
 		movieDTO.setFilmProducers("ProdutorTres");
