@@ -1,8 +1,11 @@
 package com.golden.raspbery.awards.models;
 
+import java.util.Set;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -14,6 +17,9 @@ public class Producer {
 	private Long id;
 
 	private String name;
+
+	@ManyToMany(mappedBy = "MOVIE_PRODUCERS")
+	private Set<Movie> moviesSet;
 
 	public Long getId() {
 		return id;
