@@ -46,8 +46,8 @@ public class StudioService {
 			throw ExceptionHelper.studioNameSentNotExistent();
 		}
 
-		Studio existentStudio = this.studioRepository.findStudioByName(studioDTO.getName());
-		if (existentStudio != null) {
+		Optional<Studio> studioOptional = this.studioRepository.findStudioByName(studioDTO.getName());
+		if (!studioOptional.isEmpty()) {
 			throw ExceptionHelper.studioAlreadyExistent();
 		}
 
