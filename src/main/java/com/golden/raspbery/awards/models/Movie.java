@@ -29,14 +29,14 @@ public class Movie {
 	@Column(name = "WINNER",nullable = false)
 	private Boolean isWinner;
 
-	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@ManyToMany(cascade = {CascadeType.MERGE})
 	@JoinTable(
 		name = "MOVIE_PRODUCERS",
 		joinColumns = @JoinColumn(name = "MOVIE_ID"),
 		inverseJoinColumns = @JoinColumn(name = "PRODUCER_ID"))
 	private Set<Producer> producersSet;
 
-	@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+	@ManyToMany(cascade = {CascadeType.MERGE})
 	@JoinTable(
 			name = "MOVIE_STUDIOS",
 			joinColumns = @JoinColumn(name = "MOVIE_ID"),
