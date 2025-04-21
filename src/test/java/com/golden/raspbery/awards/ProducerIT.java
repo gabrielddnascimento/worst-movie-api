@@ -19,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import com.golden.raspbery.awards.dtos.IntervalAnalysisDTO;
 import com.golden.raspbery.awards.dtos.ProducerDTO;
 
 @TestMethodOrder(OrderAnnotation.class)
@@ -111,11 +112,25 @@ public class ProducerIT extends TestBase {
 		assertNull(producerDTO.getId());
 	}
 
+	@Test
+	@Order(7)
+	public void getIntervalsAnalysisTest() {
+		ResponseEntity<IntervalAnalysisDTO> responseEntity = this.testRestTemplate.getForEntity(this.getIntervalsAnalisysEndpoint(), IntervalAnalysisDTO.class);
+		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+		IntervalAnalysisDTO intervalAnalisysDTO = responseEntity.getBody();
+		assertNotNull(intervalAnalisysDTO);
+	}
+
 	public String getEndpoint() {
 		return super.getServerURL().append(PRODUCERS_ENDPOINT).toString();
 	}
 
 	public String getEndpoint(Long id) {
 		return super.getServerURL().append(PRODUCERS_ENDPOINT).append("/").append(id).toString();
+	}
+
+	public String getIntervalsAnalisysEndpoint() {
+		return super.getServerURL().append(PRODUCERS_ENDPOINT).append("/intervals-analysis").toString();
 	}
 }

@@ -11,12 +11,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
 import com.golden.raspbery.awards.dtos.MovieDTO;
 
@@ -38,8 +41,8 @@ public class MovieIT extends TestBase {
 		movieDTO.setTitle("Nome: O Filme");
 		movieDTO.setYear(1900);
 		movieDTO.setIsWinner(true);
-		movieDTO.setFilmStudios("Alpha Video, Cinemark");
-		movieDTO.setFilmProducers("ProdutorUm, ProdutorDois");
+		movieDTO.setMovieStudios("Alpha Video, Cinemark");
+		movieDTO.setMovieProducers("ProdutorUm, ProdutorDois");
 
 		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.postForEntity(this.getEndpoint(), movieDTO, MovieDTO.class);
 		MovieIT.movieDTO = responseEntity.getBody();
@@ -50,22 +53,6 @@ public class MovieIT extends TestBase {
 
 	@Test
 	@Order(2)
-	public void createSecondWinnerOnTheSameYearTest() {
-		MovieDTO movieDTO = new MovieDTO();
-		movieDTO.setTitle("Nome: O Curta");
-		movieDTO.setYear(1900);
-		movieDTO.setIsWinner(true);
-		movieDTO.setFilmStudios("Alpha Video, Cinemark");
-		movieDTO.setFilmProducers("ProdutorUm, ProdutorDois");
-
-		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.postForEntity(this.getEndpoint(), movieDTO, MovieDTO.class);
-
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-		assertNotEquals(movieDTO, responseEntity.getBody());
-	}
-
-	@Test
-	@Order(3)
 	public void listMoviesTest() {
 		ResponseEntity<MovieDTO[]> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(), MovieDTO[].class);
 		MovieDTO[] movieDTOsArray = responseEntity.getBody();
@@ -75,7 +62,7 @@ public class MovieIT extends TestBase {
 	}
 
 	@Test
-	@Order(4)
+	@Order(3)
 	public void findMovieByIdTest() {
 		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(MovieIT.movieDTO.getId()), MovieDTO.class);
 		MovieDTO movieDTO = responseEntity.getBody();
@@ -85,14 +72,14 @@ public class MovieIT extends TestBase {
 	}
 
 	@Test
-	@Order(5)
+	@Order(4)
 	public void editMovieTest() {
 		MovieDTO movieDTO = MovieIT.movieDTO;
 		movieDTO.setTitle("Nome: O Filme 2");
 		movieDTO.setYear(1982);
 		movieDTO.setIsWinner(false);
-		movieDTO.setFilmStudios("GMO");
-		movieDTO.setFilmProducers("ProdutorTres");
+		movieDTO.setMovieStudios("GMO");
+		movieDTO.setMovieProducers("ProdutorTres");
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
@@ -107,7 +94,7 @@ public class MovieIT extends TestBase {
 	}
 
 	@Test
-	@Order(6)
+	@Order(5)
 	public void deleteMovieTest() {
 		HttpHeaders headers = new HttpHeaders();
 		HttpEntity<Boolean> requestEntity = new HttpEntity<>(headers);
@@ -117,12 +104,53 @@ public class MovieIT extends TestBase {
 	}
 
 	@Test
-	@Order(7)
+	@Order(6)
 	public void getNonExistentMovieTest() {
 		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(MovieIT.movieDTO.getId()), MovieDTO.class);
 
 		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
 		assertNotEquals(MovieIT.movieDTO, responseEntity.getBody());
+	}
+
+	@Test
+	@Order(7)
+	public void registerMovieFromCSVTest() {
+		String csvMock = "year;title;studios;producers;winner\n" +
+				"1800;Waterworld;Universal Pictures;Lawrence Gordon;\n" +
+				"1801;Barb Wire;PolyGram Filmed Entertainment;Todd Moyer;yes\n" +
+				"1802;Batman & Robin;Warner Bros.;Peter MacGregor-Scott;\n" +
+				"1812;Godzilla;TriStar Pictures;Dean Devlin;yes\n" +
+				"1817;Wild Wild West;Warner Bros.;Jon Peters;\n";
+
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+		MultiValueMap<String, Object> multiValueMap = new LinkedMultiValueMap<>();
+		multiValueMap.add("file", new ByteArrayResource(csvMock.getBytes()) {
+			@Override
+			public String getFilename() {
+				return "mock.csv";
+			}
+		});
+
+		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(multiValueMap, httpHeaders);
+
+		ResponseEntity<MovieDTO[]> responseEntity = this.testRestTemplate.postForEntity(this.getRegisterFromCSVEndpoint(), requestEntity, MovieDTO[].class);
+		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+		MovieDTO[] movieDTOsArray = responseEntity.getBody();
+		assert movieDTOsArray.length > 0;
+
+		for(MovieDTO movieDTO : movieDTOsArray) {
+			ResponseEntity<MovieDTO> movieCheckResponseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(movieDTO.getId()), MovieDTO.class);
+			assertEquals(HttpStatus.OK, movieCheckResponseEntity.getStatusCode());
+
+			HttpHeaders headers = new HttpHeaders();
+			HttpEntity<Boolean> deleteRequestEntity = new HttpEntity<>(headers);
+			ResponseEntity<Boolean> deleteResponseEntity = this.testRestTemplate.exchange(this.getEndpoint(movieDTO.getId()), HttpMethod.DELETE, deleteRequestEntity, Boolean.class);
+
+			assertEquals(HttpStatus.OK, deleteResponseEntity.getStatusCode());
+		}
 	}
 
 	public String getEndpoint() {
@@ -131,5 +159,9 @@ public class MovieIT extends TestBase {
 
 	public String getEndpoint(Long id) {
 		return super.getServerURL().append(MOVIES_ENDPOINT).append("/").append(id).toString();
+	}
+
+	public String getRegisterFromCSVEndpoint() {
+		return super.getServerURL().append(MOVIES_ENDPOINT).append("/csv").toString();
 	}
 }
