@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.golden.raspbery.awards.dtos.IntervalAnalysisDTO;
 import com.golden.raspbery.awards.dtos.ProducerDTO;
 import com.golden.raspbery.awards.infrastructure.BusinessException;
 import com.golden.raspbery.awards.infrastructure.ExceptionHelper;
@@ -66,6 +67,13 @@ public class ProducerController {
 		this.producerService.deleteProducer(id);
 
 		return ResponseEntity.ok(Boolean.TRUE);
+	}
+
+	@GetMapping("/intervals-analysis")
+	public ResponseEntity<IntervalAnalysisDTO> getMinAndMaxIntervalsAnalisys() {
+		IntervalAnalysisDTO intervalAnalysisDTO = this.producerService.getMinAndMaxIntervalAnalisys();
+
+		return ResponseEntity.ok(intervalAnalysisDTO);
 	}
 
 	@Autowired

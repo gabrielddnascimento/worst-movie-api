@@ -1,5 +1,7 @@
 package com.golden.raspbery.awards.controllers;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +14,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.golden.raspbery.awards.dtos.MovieDTO;
 import com.golden.raspbery.awards.infrastructure.BusinessException;
@@ -62,6 +66,24 @@ public class MovieController {
 		this.movieService.deleteMovie(id);
 
 		return ResponseEntity.ok(Boolean.TRUE);
+	}
+
+	@PostMapping("/csv")
+	public ResponseEntity<List<MovieDTO>> registerMovieFromCSV(@RequestParam("file") MultipartFile multiPartFile) {
+		if (multiPartFile.isEmpty() || !multiPartFile.getOriginalFilename().endsWith(".csv")) {
+			return ResponseEntity.badRequest().build();
+		}
+
+		InputStream inputStream;
+		try {
+			inputStream = multiPartFile.getInputStream();
+		} catch (IOException e) {
+			return ResponseEntity.badRequest().build();
+		}
+
+		List<MovieDTO> movieDTOsList = this.movieService.registerMoviesFromCSVInputStream(inputStream);
+
+		return ResponseEntity.ok(movieDTOsList);
 	}
 
 	@Autowired
