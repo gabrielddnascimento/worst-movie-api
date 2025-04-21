@@ -1,15 +1,17 @@
 package com.golden.raspbery.awards.services;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import com.golden.raspbery.awards.dtos.MovieDTO;
 import com.golden.raspbery.awards.infrastructure.BusinessException;
@@ -20,6 +22,12 @@ import com.golden.raspbery.awards.models.Studio;
 import com.golden.raspbery.awards.repositories.MovieRepository;
 import com.golden.raspbery.awards.repositories.ProducerRepository;
 import com.golden.raspbery.awards.repositories.StudioRepository;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
 
 @Service
 public class MovieService {
@@ -50,14 +58,6 @@ public class MovieService {
 	}
 
 	public MovieDTO registerMovie(MovieDTO movieDTO) throws BusinessException {
-		if (movieDTO.getIsWinner()) {
-			List<Movie> winnerMovieList = this.movieRepository.listMoviesByYearAndIsWinner(movieDTO.getYear(), true);
-			if (!CollectionUtils.isEmpty(winnerMovieList)) {
-				Movie winnerMovie = winnerMovieList.get(0);
-				throw ExceptionHelper.yearAlreadyHasWinnerMovie(movieDTO.getYear(), winnerMovie.getTitle());
-			}
-		}
-
 		Movie existentMovie = this.movieRepository.findMovieByYearAndTitle(movieDTO.getYear(), movieDTO.getTitle());
 
 		if (existentMovie != null) {
@@ -69,47 +69,34 @@ public class MovieService {
 		movie.setYear(movieDTO.getYear());
 		movie.setIsWinner(movieDTO.getIsWinner());
 
-		String filmProducersString = movieDTO.getFilmProducers().replace(", ", ",").replace(" and ", ",");
-		String filmStudiosString = movieDTO.getFilmStudios().replace(", ", ",");
+		String filmProducersString = movieDTO.getMovieProducers().replace(", ", ",").replace(" and ", ",");
+		String filmStudiosString = movieDTO.getMovieStudios().replace(", ", ",");
 
 		List<String> producersNameList = Arrays.asList(filmProducersString.split(","));
 		List<String> studiosNameList = Arrays.asList(filmStudiosString.split(","));
 
-		Set<Producer> producersSet = this.producerRepository.findProducerByNameList(producersNameList);
-		Set<Studio> studiosSet = this.studioRepository.findStudioByNameList(studiosNameList);
+		Set<Producer> producersSet = new HashSet<>();
+		for (String name : producersNameList) {
+			Producer producer = producerRepository.findProducerByName(name).orElseGet(() -> {
+				Producer newProducer = new Producer();
+				newProducer.setName(name);
 
-		if (producersSet.size() != producersNameList.size()) {
-			producersNameList.forEach((producerName) -> {
-				AtomicBoolean isNewProducer = new AtomicBoolean(true);
-				producersSet.forEach((producer) -> {
-					if (producer.getName().equals(producerName)) {
-						isNewProducer.set(false);
-					}
-				});
-
-				if (isNewProducer.get()) {
-					Producer producer = new Producer();
-					producer.setName(producerName);
-					producersSet.add(producer);
-				}
+				return producerRepository.save(newProducer);
 			});
+
+			producersSet.add(producer);
 		}
 
-		if (studiosSet.size() != producersNameList.size()) {
-			studiosNameList.forEach((studioName) -> {
-				AtomicBoolean isNewStudio = new AtomicBoolean(true);
-				studiosSet.forEach((studio) -> {
-					if (studio.getName().equals(studioName)) {
-						isNewStudio.set(false);
-					}
-				});
+		Set<Studio> studiosSet = new HashSet<>();
+		for (String name : studiosNameList) {
+			Studio studio = studioRepository.findStudioByName(name).orElseGet(() -> {
+				Studio newStudio = new Studio();
+				newStudio.setName(name);
 
-				if (isNewStudio.get()) {
-					Studio studio = new Studio();
-					studio.setName(studioName);
-					studiosSet.add(studio);
-				}
+				return studioRepository.save(newStudio);
 			});
+
+			studiosSet.add(studio);
 		}
 
 		movie.setProducersSet(producersSet);
@@ -128,59 +115,38 @@ public class MovieService {
 		}
 
 		Movie movie = movieOptional.get();
-		if (movieDTO.getIsWinner()) {
-			List<Movie> winnerMovieList = this.movieRepository.listMoviesByYearAndIsWinner(movieDTO.getYear(), true);
-			if (!CollectionUtils.isEmpty(winnerMovieList)) {
-				Movie winnerMovie = winnerMovieList.get(0);
-				throw ExceptionHelper.yearAlreadyHasWinnerMovie(movieDTO.getYear(), winnerMovie.getTitle());
-			}
-		}
-
 		movie.setTitle(movieDTO.getTitle());
 		movie.setYear(movieDTO.getYear());
 		movie.setIsWinner(movieDTO.getIsWinner());
 
-		String filmProducersString = movieDTO.getFilmProducers().replace(", ", ",").replace(" and ", ",");
-		String filmStudiosString = movieDTO.getFilmStudios().replace(", ", ",");
+		String filmProducersString = movieDTO.getMovieProducers().replace(", ", ",").replace(" and ", ",");
+		String filmStudiosString = movieDTO.getMovieStudios().replace(", ", ",");
 
 		List<String> producersNameList = Arrays.asList(filmProducersString.split(","));
 		List<String> studiosNameList = Arrays.asList(filmStudiosString.split(","));
 
-		Set<Producer> producersSet = this.producerRepository.findProducerByNameList(producersNameList);
-		Set<Studio> studiosSet = this.studioRepository.findStudioByNameList(studiosNameList);
+		Set<Producer> producersSet = new HashSet<>();
+		for (String name : producersNameList) {
+			Producer producer = producerRepository.findProducerByName(name).orElseGet(() -> {
+				Producer newProducer = new Producer();
+				newProducer.setName(name);
 
-		if (producersSet.size() != producersNameList.size()) {
-			producersNameList.forEach((producerName) -> {
-				AtomicBoolean isNewProducer = new AtomicBoolean(true);
-				producersSet.forEach((producer) -> {
-					if (producer.getName().equals(producerName)) {
-						isNewProducer.set(false);
-					}
-				});
-
-				if (isNewProducer.get()) {
-					Producer producer = new Producer();
-					producer.setName(producerName);
-					producersSet.add(producer);
-				}
+				return producerRepository.save(newProducer);
 			});
+
+			producersSet.add(producer);
 		}
 
-		if (studiosSet.size() != producersNameList.size()) {
-			studiosNameList.forEach((studioName) -> {
-				AtomicBoolean isNewStudio = new AtomicBoolean(true);
-				studiosSet.forEach((studio) -> {
-					if (studio.getName().equals(studioName)) {
-						isNewStudio.set(false);
-					}
-				});
+		Set<Studio> studiosSet = new HashSet<>();
+		for (String name : studiosNameList) {
+			Studio studio = studioRepository.findStudioByName(name).orElseGet(() -> {
+				Studio newStudio = new Studio();
+				newStudio.setName(name);
 
-				if (isNewStudio.get()) {
-					Studio studio = new Studio();
-					studio.setName(studioName);
-					studiosSet.add(studio);
-				}
+				return studioRepository.save(newStudio);
 			});
+
+			studiosSet.add(studio);
 		}
 
 		movie.setProducersSet(producersSet);
@@ -189,6 +155,33 @@ public class MovieService {
 		movie = this.movieRepository.save(movie);
 
 		return new MovieDTO(movie);
+	}
+
+	public List<MovieDTO> registerMoviesFromCSVInputStream(InputStream inputStream) {
+		CSVParser parser = new CSVParserBuilder().withSeparator(';').build();
+
+		InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+		CSVReader reader = new CSVReaderBuilder(inputStreamReader)
+				.withCSVParser(parser)
+				.build();
+
+		CsvToBean<MovieDTO> csvToBean = new CsvToBeanBuilder<MovieDTO>(reader)
+				.withIgnoreLeadingWhiteSpace(true)
+				.withType(MovieDTO.class)
+				.build();
+
+		List<MovieDTO> movieDTOsList = csvToBean.parse();
+
+		for(MovieDTO movieDTO : movieDTOsList) {
+			try {
+				MovieDTO returnMovieDTO = this.registerMovie(movieDTO);
+				movieDTO.setId(returnMovieDTO.getId());
+			} catch (BusinessException e) {
+				e.printStackTrace();
+			}
+		}
+
+		return movieDTOsList;
 	}
 
 	public void deleteMovie(Long id) {
