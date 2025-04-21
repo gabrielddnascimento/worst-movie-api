@@ -1,0 +1,6 @@
+services:
+  maven:
+    container_name: "Maven"
+    image: "maven:3.8.7-openjdk-18"
+    ports:
+      - 8080:8080
