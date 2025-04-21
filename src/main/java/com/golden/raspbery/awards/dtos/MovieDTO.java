@@ -1,17 +1,33 @@
 package com.golden.raspbery.awards.dtos;
 
+import java.util.Arrays;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import com.golden.raspbery.awards.infrastructure.YesNoToBooleanConverter;
 import com.golden.raspbery.awards.models.Movie;
+import com.opencsv.bean.CsvBindByName;
+import com.opencsv.bean.CsvCustomBindByName;
 
 public class MovieDTO {
 
 	private Long id;
+
+	@CsvBindByName(column = "title")
 	private String title;
+
+	@CsvBindByName(column = "year")
 	private Integer year;
+
+	@CsvCustomBindByName(column = "winner", converter = YesNoToBooleanConverter.class)
 	private Boolean isWinner;
-	private String filmProducers;
-	private String filmStudios;
+
+	@CsvBindByName(column = "producers")
+	private String movieProducers;
+
+	@CsvBindByName(column = "studios")
+	private String movieStudios;
 
 	public MovieDTO() {}
 
@@ -27,7 +43,7 @@ public class MovieDTO {
 			producersStringBuilder.append(", ");
 		});
 
-		this.filmProducers = producersStringBuilder.substring(0, producersStringBuilder.lastIndexOf(","));
+		this.movieProducers = producersStringBuilder.substring(0, producersStringBuilder.lastIndexOf(","));
 
 		StringBuilder studiosStringBuilder = new StringBuilder();
 		movie.getStudiosSet().forEach((studio) -> {
@@ -35,7 +51,7 @@ public class MovieDTO {
 			studiosStringBuilder.append(", ");
 		});;
 
-		this.filmStudios = studiosStringBuilder.substring(0, studiosStringBuilder.lastIndexOf(","));
+		this.movieStudios = studiosStringBuilder.substring(0, studiosStringBuilder.lastIndexOf(","));
 	}
 
 	public Long getId() {
@@ -70,20 +86,20 @@ public class MovieDTO {
 		this.isWinner = isWinner;
 	}
 
-	public String getFilmProducers() {
-		return filmProducers;
+	public String getMovieProducers() {
+		return movieProducers;
 	}
 
-	public void setFilmProducers(String filmProducers) {
-		this.filmProducers = filmProducers;
+	public void setMovieProducers(String filmProducers) {
+		this.movieProducers = filmProducers;
 	}
 
-	public String getFilmStudios() {
-		return filmStudios;
+	public String getMovieStudios() {
+		return movieStudios;
 	}
 
-	public void setFilmStudios(String filmStudios) {
-		this.filmStudios = filmStudios;
+	public void setMovieStudios(String filmStudios) {
+		this.movieStudios = filmStudios;
 	}
 
 	@Override
@@ -95,9 +111,31 @@ public class MovieDTO {
 		if (getClass() != obj.getClass())
 			return false;
 		MovieDTO other = (MovieDTO) obj;
-		return Objects.equals(filmProducers, other.filmProducers) && Objects.equals(filmStudios, other.filmStudios)
-				&& Objects.equals(isWinner, other.isWinner)
-				&& Objects.equals(title, other.title) && Objects.equals(year, other.year);
+
+		Set<String> thisProducersSet = null;
+		Set<String> otherProducersSet = null;
+		Set<String> thisStudiosSet = null;
+		Set<String> otherStudiosSet = null;
+
+		if (this.movieProducers != null) {
+			thisProducersSet = Arrays.stream(this.movieProducers.split(",")).map(String::trim).collect(Collectors.toSet());
+		}
+
+		if (other.movieProducers != null) {
+			otherProducersSet = Arrays.stream(other.movieProducers.split(",")).map(String::trim).collect(Collectors.toSet());
+		}
+
+		if (this.movieStudios != null) {
+			thisStudiosSet = Arrays.stream(this.movieStudios.split(",")).map(String::trim).collect(Collectors.toSet());
+		}
+
+		if (other.movieStudios != null) {
+			otherStudiosSet = Arrays.stream(other.movieStudios.split(",")).map(String::trim).collect(Collectors.toSet());
+		}
+
+		return Objects.equals(thisStudiosSet, otherStudiosSet) && Objects.equals(thisProducersSet, otherProducersSet)
+				&& Objects.equals(isWinner, other.isWinner) && Objects.equals(title, other.title)
+				&& Objects.equals(year, other.year);
 	}
 
 
