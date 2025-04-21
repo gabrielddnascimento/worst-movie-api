@@ -47,6 +47,6 @@ public class ExceptionHelper {
 	}
 
 	public static BusinessException yearAlreadyHasWinnerMovie(int year, String winnerMovieTitle) {
-		return new BusinessException("O ano %d já possui um filme vencedor: %s");
+		return new BusinessException("O ano %d já possui um filme vencedor: %s", year, winnerMovieTitle);
 	}
 }
