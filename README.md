@@ -4,55 +4,96 @@ API RESTful para leitura da lista de indicados e vencedores da categoria **Pior 
 
 ---
 
-## 📋 Especificação do Desafio
-
-Você deve desenvolver uma API RESTful capaz de:
-
-- 📥 **Ler um arquivo CSV** contendo os filmes e inserir os dados em um banco de dados em memória ao iniciar a aplicação.
-- 📊 **Analisar os dados** e retornar os produtores com:
-  - Maior intervalo entre dois prêmios consecutivos.
-  - Menor intervalo entre dois prêmios consecutivos.
-
-### ✅ Requisitos Atendidos
-
-- ☑️ Leitura de arquivo CSV ao iniciar a aplicação  
-- ☑️ API RESTful nível 2 de Richardson  
-- ☑️ Banco de dados em memória (H2)  
-- ☑️ Testes de integração cobrindo a lógica  
-- ☑️ Sem dependência de instalação externa  
-
----
-
 ## ⚙️ Tecnologias Utilizadas
 
 - ☕ Java 17  
-- 🔧 Spring Boot  
-- 🧬 Spring Data JPA  
-- 🗃️ H2 Database (in-memory)  
-- 📦 Maven  
-- 🧪 JUnit 5  
+- 🔧 Spring Boot
+- 🚀 Servidor Tomcat embutido
+- 🧬 Spring Data JPA
+- 🗃️ H2 Database (banco de dados embarcado e in-memory)
+- 📦 Maven
+- 🧪 JUnit 5
+- 📘 Swagger UI
+- 📄 OpenCSV
+
+## 🧠 Conceitos Aplicados
+
+- 📶 Nível 2 de maturidade de Richardson
+- 🧪 Test-Driven Development
+- 🏗️ Arquitetura Em Camadas
 
 ---
 
-## 🚀 Como executar
+## 🚀 Como Executar
 
-> A aplicação irá:
+- Clonar o repositório com o comando:
+  ```bash
+    git clone https://github.com/gabrielddnascimento/worst-movie-api.git
+  ```
+- Entrar no projeto e instalar as dependencias:
+  ```bash
+    cd worst-movie-api
+    mvn clean install -DskipTests
+  ```
+- Escolher como irá rodar:
 
-- 📄 Ler o arquivo `movies.csv` da pasta `resources`
-- 🗄️ Popular o banco H2 em memória
-- 🌐 Deixar a API acessível em `http://localhost:8080`
+### Via Docker
+- Para rodar o sistema via docker, a porta 8080 deve estar liberada. Após isso, será necessário rodar o seguinte comando:
+  ```bash
+    docker compose up
+  ```
+- Caso queira rodar o container detached, também é possível adicionar "-d" ao final do comando
 
-### 🧪 Executar os testes
+### Via Maven (mvn)
+- Para rodar o sistema via maven, a porta 8080 deve estar liberada. Após isso, será necessário rodar o seguinte comando:
+```bash
+  mvn spring-boot:run
+```
+### Via IDE
+- Importar o projeto na IDE;
+- Pressionar o botão direito na pasta fonte do projeto;
+- Passar o cursor sobre Run As;
+- Selecionar Java Application;
 
-Este projeto possui apenas **testes de integração**.
+**Pode variar de IDE para IDE**
 
+> Ao iniciar, a aplicação irá:
+> - 🌐 Deixar a API acessível em `http://localhost:8080`;
+> - 📄 Ler o arquivo `movielist.csv` da pasta `resources`;
+> - 🗄️ Popular o banco H2 em memória com os dados do CSV;
+> - 📘 Disponibilizar uma interface do swagger ao acessar a URL do servidor em algum navegador;
+
+
+## 📝 Observações
+
+- 📁 O arquivo `movielist.csv` deve estar localizado em `src/main/resources`;
+- 🚀 Os dados são carregados automaticamente ao subir a aplicação;
+- ✅ Nenhuma configuração adicional é necessária para executar a aplicação;
+- 🧪 Os testes devem ser ignorados ao realizar o mvn clean install pois por serem testes de integração, eles não funcionam sem o servidor estar de pé;
+
+## 🧪 Executando Testes de Integração
+
+Este projeto possui apenas **testes de integração**, ou seja, só irão retornar com sucesso caso o servidor esteja rodando.
+
+Ainda dentro da pasta do projeto será necessário rodar o seguinte comando para realizar os testes:
 ```bash
 mvn test
 ```
 
+Também é possível rodar via IDE:
+ - Pressionar o botão direito na pasta fonte do projeto
+ - Passar o cursor sobre Run As
+ - Pressionar Junit Test
+
+**Pode variar de IDE para IDE**
+
+## 💻 Testes Manuais
+Para executar testes manuais, será possível acessar o swagger na URL `http:localhost:8080`.
+Nessa URL já estará disponível todas as requisições assim como os dados que a API recebe no body/pathing
+
 ---
 
-## 📂 Endpoints disponíveis
+## 📂 Endpoint Principal
 
 ### 🔎 Análise de Intervalos
 
@@ -82,32 +123,4 @@ Retorna os produtores com o **menor** e **maior** intervalo entre vitórias cons
 }
 ```
 
----
-
-## 📝 Observações
-
-- 📁 O arquivo `movies.csv` deve estar localizado em `src/main/resources`
-- 🚀 Os dados são carregados automaticamente ao subir a aplicação
-- ✅ Nenhuma configuração adicional é necessária para executar a aplicação
-
----
-
-## 📦 Como subir com Docker (opcional)
-
-Se desejar, você pode configurar um ambiente com Docker e Docker Compose. Basta adicionar um `docker-compose.yml` e um `Dockerfile` (caso ainda não tenha) e rodar:
-
-```bash
-docker-compose up --build
-```
-
----
-
-## 🧠 Extras
-
-- A aplicação utiliza o padrão DTO + Entidades + Services + Repositories.
-- Está separada por responsabilidades, facilitando manutenções futuras.
-- O código está coberto por testes de integração com uso de `TestRestTemplate`.
-
----
-
-Feito com 💛 para o desafio técnico Golden Raspberry Awards.
+Para uma lista completa com os endpoints, será necessário acessar a URL do servidor, que por padrão é: `localhost:8080`
