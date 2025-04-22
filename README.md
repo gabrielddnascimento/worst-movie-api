@@ -26,18 +26,14 @@ API RESTful para leitura da lista de indicados e vencedores da categoria **Pior 
 
 ## 🚀 Como Executar
 
-- Clonar o repositório com o comando:
+- Clonar o repositório com o comando e acessar a pasta do projeto:
   ```bash
     git clone https://github.com/gabrielddnascimento/worst-movie-api.git
-  ```
-- Entrar no projeto e instalar as dependencias:
-  ```bash
     cd worst-movie-api
-    mvn clean install -DskipTests
   ```
 - Escolher como irá rodar:
 
-### Via Docker
+### Via Docker - **recomendado**
 - Para rodar o sistema via docker, a porta 8080 deve estar liberada. Após isso, será necessário rodar o seguinte comando:
   ```bash
     docker compose up
@@ -47,6 +43,7 @@ API RESTful para leitura da lista de indicados e vencedores da categoria **Pior 
 ### Via Maven (mvn)
 - Para rodar o sistema via maven, a porta 8080 deve estar liberada. Após isso, será necessário rodar o seguinte comando:
 ```bash
+  mvn clean package -DskipTests
   mvn spring-boot:run
 ```
 ### Via IDE
