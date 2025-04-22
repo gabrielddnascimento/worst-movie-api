@@ -8,4 +8,4 @@ services:
       - .:/app
     ports:
       - "8080:8080"
-    command: mvn spring-boot:run
+    command: bash -c "mvn clean package -DskipTests && mvn spring-boot:run"
