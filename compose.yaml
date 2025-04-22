@@ -1,6 +1,11 @@
+
 services:
-  maven:
-    container_name: "Maven"
-    image: "maven:3.8.7-openjdk-18"
+  springboot-app:
+    image: maven:3.9.9-eclipse-temurin-17
+    container_name: springboot-container
+    working_dir: /app
+    volumes:
+      - .:/app
     ports:
-      - 8080:8080
+      - "8080:8080"
+    command: mvn spring-boot:run
