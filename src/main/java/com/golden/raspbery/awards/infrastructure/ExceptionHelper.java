@@ -38,15 +38,7 @@ public class ExceptionHelper {
 		return new BusinessException("O filme de ID %d não foi encontrado.", id);
 	}
 
-	public static BusinessException movieAlreadyExistent(String title) {
-		return new BusinessException("O filme \"%s\" já existe.", title);
-	}
-
 	public static BusinessException movieNotSent() {
 		return new BusinessException("O produtor não foi enviado na requisição.");
-	}
-
-	public static BusinessException yearAlreadyHasWinnerMovie(int year, String winnerMovieTitle) {
-		return new BusinessException("O ano %d já possui um filme vencedor: %s", year, winnerMovieTitle);
 	}
 }
