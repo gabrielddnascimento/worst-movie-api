@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -68,7 +69,7 @@ public class MovieController {
 		return ResponseEntity.ok(Boolean.TRUE);
 	}
 
-	@PostMapping("/csv")
+	@PostMapping(path = "/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
 	public ResponseEntity<List<MovieDTO>> registerMovieFromCSV(@RequestParam("file") MultipartFile multiPartFile) {
 		if (multiPartFile.isEmpty() || !multiPartFile.getOriginalFilename().endsWith(".csv")) {
 			return ResponseEntity.badRequest().build();
