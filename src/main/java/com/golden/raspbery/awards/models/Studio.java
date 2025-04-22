@@ -36,4 +36,12 @@ public class Studio {
 	public void setName(String name) {
 		this.name = name;
 	}
+
+	public Set<Movie> getMoviesSet() {
+		return moviesSet;
+	}
+
+	public void setMoviesSet(Set<Movie> moviesSet) {
+		this.moviesSet = moviesSet;
+	}
 }
