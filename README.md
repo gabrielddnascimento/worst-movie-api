@@ -66,7 +66,7 @@ API RESTful para leitura da lista de indicados e vencedores da categoria **Pior 
 - 📁 O arquivo `movielist.csv` deve estar localizado em `src/main/resources`;
 - 🚀 Os dados são carregados automaticamente ao subir a aplicação;
 - ✅ Nenhuma configuração adicional é necessária para executar a aplicação;
-- 🧪 Os testes devem ser ignorados ao realizar o mvn clean install pois por serem testes de integração, eles não funcionam sem o servidor estar de pé;
+- 🧪 Os testes devem ser ignorados ao realizar o mvn clean package pois por serem testes de integração, eles não funcionam sem o servidor estar de pé;
 
 ## 🧪 Executando Testes de Integração
 
