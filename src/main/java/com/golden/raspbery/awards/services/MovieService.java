@@ -58,12 +58,6 @@ public class MovieService {
 	}
 
 	public MovieDTO registerMovie(MovieDTO movieDTO) throws BusinessException {
-		Movie existentMovie = this.movieRepository.findMovieByYearAndTitle(movieDTO.getYear(), movieDTO.getTitle());
-
-		if (existentMovie != null) {
-			throw ExceptionHelper.movieAlreadyExistent(movieDTO.getTitle());
-		}
-
 		Movie movie = new Movie();
 		movie.setTitle(movieDTO.getTitle());
 		movie.setYear(movieDTO.getYear());
