@@ -3,14 +3,7 @@ package com.golden.raspbery.awards;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class TestBase {
-	private static final String SERVER_URL = "http://localhost:";
-	private static final int SERVER_PORT = 8080;
-
 	private static final ObjectMapper objectMapper = new ObjectMapper();
-
-	public StringBuilder getServerURL() {
-		return new StringBuilder(SERVER_URL).append(SERVER_PORT);
-	}
 
 	public static <T> T fromJson(String json, Class<T> clazz) {
 		try {

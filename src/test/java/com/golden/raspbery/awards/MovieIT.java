@@ -7,7 +7,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
@@ -47,7 +46,7 @@ public class MovieIT extends TestBase {
 		movieDTO.setMovieProducers("ProdutorUm, ProdutorDois");
 
 		MvcResult mvcResult = this.mockMvc.perform(post(this.getEndpoint())
-				.content(super.toJson(movieDTO)).contentType(MediaType.APPLICATION_JSON)).andDo(print())
+				.content(super.toJson(movieDTO)).contentType(MediaType.APPLICATION_JSON))
 				.andExpect(status().isOk()).andReturn();
 		String jsonResult = mvcResult.getResponse().getContentAsString();
 		MovieIT.movieDTO = super.fromJson(jsonResult, MovieDTO.class);

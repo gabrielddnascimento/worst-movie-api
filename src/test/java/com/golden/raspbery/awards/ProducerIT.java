@@ -6,14 +6,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -115,7 +113,7 @@ public class ProducerIT extends TestBase {
 	@Test
 	@Order(7)
 	public void getIntervalsAnalysisTest() throws Exception {
-		MvcResult result = mockMvc.perform(get(getIntervalsAnalysisEndpoint()))
+		MvcResult result = mockMvc.perform(get(getIntervalsAnalysisEndpoint())).andDo(print())
 				.andExpect(status().isOk())
 				.andReturn();
 
