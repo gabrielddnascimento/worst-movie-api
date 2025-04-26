@@ -1,5 +1,7 @@
 package com.golden.raspbery.awards.dtos;
 
+import java.util.Objects;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class IntervalDTO {
@@ -56,6 +58,19 @@ public class IntervalDTO {
 
 	public void setFollowingWinYear(int followingWinYear) {
 		this.followingWinYear = followingWinYear;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		IntervalDTO other = (IntervalDTO) obj;
+		return followingWinYear == other.followingWinYear && previousWinYear == other.previousWinYear
+				&& Objects.equals(producerName, other.producerName) && yearsInterval == other.yearsInterval;
 	}
 
 	
