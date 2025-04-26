@@ -39,11 +39,12 @@ API RESTful para leitura da lista de indicados e vencedores da categoria **Pior 
     docker compose up
   ```
 - Caso queira rodar o container detached, também é possível adicionar "-d" ao final do comando
+- Esse comando também irá rodar os testes de integração antes do servidor subir
 
 ### Via Maven (mvn)
 - Para rodar o sistema via maven, a porta 8080 deve estar liberada. Após isso, será necessário rodar o seguinte comando:
 ```bash
-  mvn clean package -DskipTests
+  mvn clean package
   mvn spring-boot:run
 ```
 ### Via IDE
@@ -64,18 +65,20 @@ API RESTful para leitura da lista de indicados e vencedores da categoria **Pior 
 ## 📝 Observações
 
 - 📁 O arquivo `movielist.csv` deve estar localizado em `src/main/resources`;
+- 🧪 O teste de integração da API `/producers/intervals-analysis` só irá funcionar para o CSV de dados fornecido. Após alguma alteração do arquivo que resulte na alteração do resultado da API, o teste irá falhar;
 - 🚀 Os dados são carregados automaticamente ao subir a aplicação;
 - ✅ Nenhuma configuração adicional é necessária para executar a aplicação;
-- 🧪 Os testes devem ser ignorados ao realizar o mvn clean package pois por serem testes de integração, eles não funcionam sem o servidor estar de pé;
 
 ## 🧪 Executando Testes de Integração
 
 Este projeto possui apenas **testes de integração**, ou seja, só irão retornar com sucesso caso o servidor esteja rodando.
 
-Ainda dentro da pasta do projeto será necessário rodar o seguinte comando para realizar os testes:
+Ainda dentro da pasta do projeto será necessário rodar o seguinte comando para realizar somente os testes:
 ```bash
 mvn test
 ```
+
+Os testes também são rodados ao utilizar os comandos `mvn clean package` e `docker compose up`.
 
 Também é possível rodar via IDE:
  - Pressionar o botão direito na pasta fonte do projeto
