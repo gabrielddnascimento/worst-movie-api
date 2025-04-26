@@ -2,135 +2,155 @@ package com.golden.raspbery.awards;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.assertj.core.util.Arrays;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import com.golden.raspbery.awards.dtos.IntervalAnalysisDTO;
+import com.golden.raspbery.awards.dtos.IntervalDTO;
 import com.golden.raspbery.awards.dtos.ProducerDTO;
 
 @TestMethodOrder(OrderAnnotation.class)
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class ProducerIT extends TestBase {
+
 	private static final String PRODUCERS_ENDPOINT = "/producers";
 
 	@Autowired
-	private TestRestTemplate testRestTemplate;
+	private MockMvc mockMvc;
 
 	private static ProducerDTO producerDTO;
 
 	@Test
 	@Order(1)
-	public void createProducerTest() {
-		ProducerDTO producerDTO = new ProducerDTO();
-		producerDTO.setName("ProducerTest");
+	public void createProducerTest() throws Exception {
+		ProducerDTO newProducer = new ProducerDTO();
+		newProducer.setName("ProducerTest");
 
-		ResponseEntity<ProducerDTO> responseEntity = this.testRestTemplate.postForEntity(this.getEndpoint(), producerDTO, ProducerDTO.class);
+		MvcResult result = mockMvc.perform(post(getEndpoint())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(super.toJson(newProducer)))
+				.andExpect(status().isOk())
+				.andReturn();
 
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
-		ProducerIT.producerDTO = responseEntity.getBody();
-		assertNotNull(ProducerIT.producerDTO);
-		assertEquals(producerDTO.getName(), ProducerIT.producerDTO.getName());
+		producerDTO = super.fromJson(result.getResponse().getContentAsString(), ProducerDTO.class);
+		assertNotNull(producerDTO);
+		assertEquals(newProducer.getName(), producerDTO.getName());
 	}
 
 	@Test
 	@Order(2)
-	public void listProducersTest() {
-		ResponseEntity<ProducerDTO[]> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(), ProducerDTO[].class);
+	public void listProducersTest() throws Exception {
+		MvcResult result = mockMvc.perform(get(getEndpoint()))
+				.andExpect(status().isOk())
+				.andReturn();
 
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
-		ProducerDTO[] producersDTOArray = responseEntity.getBody();
-		assertNotNull(producersDTOArray);
-		assert producersDTOArray.length > 0;
+		ProducerDTO[] producers = super.fromJson(result.getResponse().getContentAsString(), ProducerDTO[].class);
+		assertNotNull(producers);
+		assert producers.length > 0;
 	}
 
 	@Test
 	@Order(3)
-	public void getProducerByIdTest() {
-		ResponseEntity<ProducerDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(ProducerIT.producerDTO.getId()), ProducerDTO.class);
+	public void getProducerByIdTest() throws Exception {
+		MvcResult result = mockMvc.perform(get(getEndpoint(producerDTO.getId())))
+				.andExpect(status().isOk())
+				.andReturn();
 
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
-		ProducerDTO producerDTO = responseEntity.getBody();
-
-		assertNotNull(producerDTO);
-		assert ProducerIT.producerDTO.equals(producerDTO);
+		ProducerDTO found = super.fromJson(result.getResponse().getContentAsString(), ProducerDTO.class);
+		assertNotNull(found);
+		assertEquals(producerDTO, found);
 	}
 
 	@Test
 	@Order(4)
-	public void editProducerTest() {
-		ProducerIT.producerDTO.setName("ProducerDifferentNameTest");
+	public void editProducerTest() throws Exception {
+		producerDTO.setName("ProducerDifferentNameTest");
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		MvcResult result = mockMvc.perform(put(getEndpoint(producerDTO.getId()))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(super.toJson(producerDTO)))
+				.andExpect(status().isOk())
+				.andReturn();
 
-		HttpEntity<ProducerDTO> requestEntity = new HttpEntity<>(ProducerIT.producerDTO, headers);
-		ResponseEntity<ProducerDTO> responseEntity = this.testRestTemplate.exchange(this.getEndpoint(ProducerIT.producerDTO.getId()), HttpMethod.PUT, requestEntity, ProducerDTO.class);
-
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
-		ProducerDTO producerDTO = responseEntity.getBody();
-
-		assertNotNull(producerDTO);
-		assert ProducerIT.producerDTO.equals(producerDTO);
+		ProducerDTO updated = super.fromJson(result.getResponse().getContentAsString(), ProducerDTO.class);
+		assertNotNull(updated);
+		assertEquals(producerDTO, updated);
+		producerDTO = updated;
 	}
 
 	@Test
 	@Order(5)
-	public void deleteProducerTest() {
-		HttpHeaders headers = new HttpHeaders();
-		HttpEntity<Boolean> requestEntity = new HttpEntity<>(headers);
-		ResponseEntity<Boolean> responseEntity = this.testRestTemplate.exchange(this.getEndpoint(ProducerIT.producerDTO.getId()), HttpMethod.DELETE, requestEntity, Boolean.class);
-
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+	public void deleteProducerTest() throws Exception {
+		mockMvc.perform(delete(getEndpoint(producerDTO.getId())))
+				.andExpect(status().isOk());
 	}
 
 	@Test
 	@Order(6)
-	public void getNonExistentProducerTest() {
-		ResponseEntity<ProducerDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(ProducerIT.producerDTO.getId()), ProducerDTO.class);
-
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-
-		ProducerDTO producerDTO = responseEntity.getBody();
-		assertNull(producerDTO.getId());
+	public void getNonExistentProducerTest() throws Exception {
+		mockMvc.perform(get(getEndpoint(producerDTO.getId())))
+				.andExpect(status().is5xxServerError());
 	}
 
 	@Test
 	@Order(7)
-	public void getIntervalsAnalysisTest() {
-		ResponseEntity<IntervalAnalysisDTO> responseEntity = this.testRestTemplate.getForEntity(this.getIntervalsAnalisysEndpoint(), IntervalAnalysisDTO.class);
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+	public void getIntervalsAnalysisTest() throws Exception {
+		MvcResult result = mockMvc.perform(get(getIntervalsAnalysisEndpoint()))
+				.andExpect(status().isOk())
+				.andReturn();
 
-		IntervalAnalysisDTO intervalAnalisysDTO = responseEntity.getBody();
-		assertNotNull(intervalAnalisysDTO);
+		IntervalAnalysisDTO returnedIntervalAnalysisDTO = super.fromJson(result.getResponse().getContentAsString(), IntervalAnalysisDTO.class);
+		assertNotNull(returnedIntervalAnalysisDTO);
+
+		IntervalAnalysisDTO correctIntervalAnalysisDTO = new IntervalAnalysisDTO();
+
+		IntervalDTO minIntervalDTO = new IntervalDTO();
+		minIntervalDTO.setProducerName("Joel Silver");
+		minIntervalDTO.setYearsInterval(1);
+		minIntervalDTO.setPreviousWinYear(1990);
+		minIntervalDTO.setFollowingWinYear(1991);
+
+		IntervalDTO maxIntervalDTO = new IntervalDTO();
+		maxIntervalDTO.setProducerName("Matthew Vaughn");
+		maxIntervalDTO.setYearsInterval(13);
+		maxIntervalDTO.setPreviousWinYear(2002);
+		maxIntervalDTO.setFollowingWinYear(2015);
+
+		correctIntervalAnalysisDTO.setMinIntervalsList(Collections.singletonList(minIntervalDTO));
+		correctIntervalAnalysisDTO.setMaxIntervalsList(Collections.singletonList(maxIntervalDTO));
+
+		assertEquals(correctIntervalAnalysisDTO, returnedIntervalAnalysisDTO);
 	}
 
-	public String getEndpoint() {
-		return super.getServerURL().append(PRODUCERS_ENDPOINT).toString();
+	private String getEndpoint() {
+		return PRODUCERS_ENDPOINT;
 	}
 
-	public String getEndpoint(Long id) {
-		return super.getServerURL().append(PRODUCERS_ENDPOINT).append("/").append(id).toString();
+	private String getEndpoint(Long id) {
+		return String.format(PRODUCERS_ENDPOINT + "/%d", id);
 	}
 
-	public String getIntervalsAnalisysEndpoint() {
-		return super.getServerURL().append(PRODUCERS_ENDPOINT).append("/intervals-analysis").toString();
+	private String getIntervalsAnalysisEndpoint() {
+		return PRODUCERS_ENDPOINT + "/intervals-analysis";
 	}
 }

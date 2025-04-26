@@ -2,120 +2,114 @@ package com.golden.raspbery.awards;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import com.golden.raspbery.awards.dtos.StudioDTO;
 
 @TestMethodOrder(OrderAnnotation.class)
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class StudioIT extends TestBase {
+
 	private static final String STUDIOS_ENDPOINT = "/studios";
 
 	@Autowired
-	private TestRestTemplate testRestTemplate;
+	private MockMvc mockMvc;
 
 	private static StudioDTO studioDTO;
 
 	@Test
 	@Order(1)
-	public void createStudioTest() {
-		StudioDTO studioDTO = new StudioDTO();
-		studioDTO.setName("MovieTest");
+	public void createStudioTest() throws Exception {
+		StudioDTO newStudio = new StudioDTO();
+		newStudio.setName("MovieTest");
 
-		ResponseEntity<StudioDTO> responseEntity = this.testRestTemplate.postForEntity(this.getEndpoint(), studioDTO, StudioDTO.class);
+		MvcResult result = mockMvc.perform(post(getEndpoint())
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(super.toJson(newStudio)))
+				.andExpect(status().isOk())
+				.andReturn();
 
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
-		StudioIT.studioDTO = responseEntity.getBody();
-		assertNotNull(StudioIT.studioDTO);
-		assertEquals(studioDTO.getName(), StudioIT.studioDTO.getName());
+		studioDTO = super.fromJson(result.getResponse().getContentAsString(), StudioDTO.class);
+		assertNotNull(studioDTO);
+		assertEquals(newStudio.getName(), studioDTO.getName());
 	}
 
 	@Test
 	@Order(2)
-	public void listStudiosTest() {
-		ResponseEntity<StudioDTO[]> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(), StudioDTO[].class);
+	public void listStudiosTest() throws Exception {
+		MvcResult result = mockMvc.perform(get(getEndpoint()))
+				.andExpect(status().isOk())
+				.andReturn();
 
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
-		StudioDTO[] studiosDTOArray = responseEntity.getBody();
-		assertNotNull(studiosDTOArray);
-		assert studiosDTOArray.length > 0;
+		StudioDTO[] studios = super.fromJson(result.getResponse().getContentAsString(), StudioDTO[].class);
+		assertNotNull(studios);
+		assert studios.length > 0;
 	}
 
 	@Test
 	@Order(3)
-	public void getStudioByIdTest() {
-		ResponseEntity<StudioDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(StudioIT.studioDTO.getId()), StudioDTO.class);
+	public void getStudioByIdTest() throws Exception {
+		MvcResult result = mockMvc.perform(get(getEndpoint(studioDTO.getId())))
+				.andExpect(status().isOk())
+				.andReturn();
 
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
-		StudioDTO studioDTO = responseEntity.getBody();
-
-		assertNotNull(studioDTO);
-		assert StudioIT.studioDTO.equals(studioDTO);
+		StudioDTO found = super.fromJson(result.getResponse().getContentAsString(), StudioDTO.class);
+		assertNotNull(found);
+		assertEquals(studioDTO, found);
 	}
 
 	@Test
 	@Order(4)
-	public void editStudioTest() {
-		StudioIT.studioDTO.setName("StudioDifferentNameTest");
+	public void editStudioTest() throws Exception {
+		studioDTO.setName("StudioDifferentNameTest");
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		MvcResult result = mockMvc.perform(put(getEndpoint(studioDTO.getId()))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(super.toJson(studioDTO)))
+				.andExpect(status().isOk())
+				.andReturn();
 
-		HttpEntity<StudioDTO> requestEntity = new HttpEntity<>(StudioIT.studioDTO, headers);
-		ResponseEntity<StudioDTO> responseEntity = this.testRestTemplate.exchange(this.getEndpoint(StudioIT.studioDTO.getId()), HttpMethod.PUT, requestEntity, StudioDTO.class);
-
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
-		StudioDTO studioDTO = responseEntity.getBody();
-
-		assertNotNull(studioDTO);
-		assert StudioIT.studioDTO.equals(studioDTO);
+		StudioDTO updated = super.fromJson(result.getResponse().getContentAsString(), StudioDTO.class);
+		assertNotNull(updated);
+		assertEquals(studioDTO, updated);
+		studioDTO = updated;
 	}
 
 	@Test
 	@Order(5)
-	public void deleteStudioTest() {
-		HttpHeaders headers = new HttpHeaders();
-		HttpEntity<Boolean> requestEntity = new HttpEntity<>(headers);
-		ResponseEntity<Boolean> responseEntity = this.testRestTemplate.exchange(this.getEndpoint(StudioIT.studioDTO.getId()), HttpMethod.DELETE, requestEntity, Boolean.class);
-
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+	public void deleteStudioTest() throws Exception {
+		mockMvc.perform(delete(getEndpoint(studioDTO.getId())))
+				.andExpect(status().isOk());
 	}
 
 	@Test
 	@Order(6)
-	public void getNonExistentStudioTest() {
-		ResponseEntity<StudioDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(StudioIT.studioDTO.getId()), StudioDTO.class);
-
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-
-		StudioDTO studioDTO = responseEntity.getBody();
-		assertNull(studioDTO.getId());
+	public void getNonExistentStudioTest() throws Exception {
+		mockMvc.perform(get(getEndpoint(studioDTO.getId())))
+				.andExpect(status().is5xxServerError());
 	}
 
-	public String getEndpoint() {
-		return super.getServerURL().append(STUDIOS_ENDPOINT).toString();
+	private String getEndpoint() {
+		return STUDIOS_ENDPOINT;
 	}
 
-	public String getEndpoint(Long id) {
-		return super.getServerURL().append(STUDIOS_ENDPOINT).append("/").append(id).toString();
+	private String getEndpoint(Long id) {
+		return String.format(STUDIOS_ENDPOINT + "/%d", id);
 	}
 }

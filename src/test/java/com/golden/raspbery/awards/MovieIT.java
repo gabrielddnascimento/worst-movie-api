@@ -1,30 +1,32 @@
 package com.golden.raspbery.awards;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import com.golden.raspbery.awards.dtos.MovieDTO;
 
 @TestMethodOrder(value = OrderAnnotation.class)
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class MovieIT extends TestBase {
 
 	private static final String MOVIES_ENDPOINT = "/movies";
@@ -32,11 +34,11 @@ public class MovieIT extends TestBase {
 	private static MovieDTO movieDTO;
 
 	@Autowired
-	private TestRestTemplate testRestTemplate;
+	private MockMvc mockMvc;
 
 	@Test
 	@Order(1)
-	public void createMovieTest() {
+	public void createMovieTest() throws Exception {
 		MovieDTO movieDTO = new MovieDTO();
 		movieDTO.setTitle("Nome: O Filme");
 		movieDTO.setYear(1900);
@@ -44,124 +46,95 @@ public class MovieIT extends TestBase {
 		movieDTO.setMovieStudios("Alpha Video, Cinemark");
 		movieDTO.setMovieProducers("ProdutorUm, ProdutorDois");
 
-		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.postForEntity(this.getEndpoint(), movieDTO, MovieDTO.class);
-		MovieIT.movieDTO = responseEntity.getBody();
+		MvcResult mvcResult = this.mockMvc.perform(post(this.getEndpoint())
+				.content(super.toJson(movieDTO)).contentType(MediaType.APPLICATION_JSON)).andDo(print())
+				.andExpect(status().isOk()).andReturn();
+		String jsonResult = mvcResult.getResponse().getContentAsString();
+		MovieIT.movieDTO = super.fromJson(jsonResult, MovieDTO.class);
 
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 		assertEquals(MovieIT.movieDTO, movieDTO);
 	}
 
 	@Test
 	@Order(2)
-	public void listMoviesTest() {
-		ResponseEntity<MovieDTO[]> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(), MovieDTO[].class);
-		MovieDTO[] movieDTOsArray = responseEntity.getBody();
+	public void listMoviesTest() throws Exception {
+		MvcResult result = mockMvc.perform(get(getEndpoint())).andExpect(status().isOk()).andReturn();
 
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-		assert movieDTOsArray.length > 0;
+		MovieDTO[] movieDTOs = super.fromJson(result.getResponse().getContentAsString(), MovieDTO[].class);
+		assertTrue(movieDTOs.length > 0);
 	}
 
 	@Test
 	@Order(3)
-	public void findMovieByIdTest() {
-		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(MovieIT.movieDTO.getId()), MovieDTO.class);
-		MovieDTO movieDTO = responseEntity.getBody();
+	public void findMovieByIdTest() throws Exception {
+		MvcResult result = mockMvc.perform(get(getEndpoint(movieDTO.getId()))).andExpect(status().isOk()).andReturn();
 
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-		assertEquals(MovieIT.movieDTO, movieDTO);
+		MovieDTO found = super.fromJson(result.getResponse().getContentAsString(), MovieDTO.class);
+		assertEquals(movieDTO, found);
 	}
 
 	@Test
 	@Order(4)
-	public void editMovieTest() {
-		MovieDTO movieDTO = MovieIT.movieDTO;
+	public void editMovieTest() throws Exception {
 		movieDTO.setTitle("Nome: O Filme 2");
 		movieDTO.setYear(1982);
 		movieDTO.setIsWinner(false);
 		movieDTO.setMovieStudios("GMO");
 		movieDTO.setMovieProducers("ProdutorTres");
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_JSON);
+		MvcResult result = mockMvc.perform(put(getEndpoint(movieDTO.getId())).contentType(MediaType.APPLICATION_JSON)
+				.content(super.toJson(movieDTO))).andExpect(status().isOk()).andReturn();
 
-		HttpEntity<MovieDTO> requestEntity = new HttpEntity<>(movieDTO, headers);
-		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.exchange(this.getEndpoint(MovieIT.movieDTO.getId()), HttpMethod.PUT, requestEntity, MovieDTO.class);
-
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-		assertEquals(movieDTO, responseEntity.getBody());
-
-		MovieIT.movieDTO = responseEntity.getBody();
+		MovieDTO updated = super.fromJson(result.getResponse().getContentAsString(), MovieDTO.class);
+		assertEquals(movieDTO, updated);
+		movieDTO = updated;
 	}
 
 	@Test
 	@Order(5)
-	public void deleteMovieTest() {
-		HttpHeaders headers = new HttpHeaders();
-		HttpEntity<Boolean> requestEntity = new HttpEntity<>(headers);
-		ResponseEntity<Boolean> responseEntity = this.testRestTemplate.exchange(this.getEndpoint(MovieIT.movieDTO.getId()), HttpMethod.DELETE, requestEntity, Boolean.class);
-
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+	public void deleteMovieTest() throws Exception {
+		mockMvc.perform(delete(getEndpoint(movieDTO.getId()))).andExpect(status().isOk());
 	}
 
 	@Test
 	@Order(6)
-	public void getNonExistentMovieTest() {
-		ResponseEntity<MovieDTO> responseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(MovieIT.movieDTO.getId()), MovieDTO.class);
-
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
-		assertNotEquals(MovieIT.movieDTO, responseEntity.getBody());
+	public void getNonExistentMovieTest() throws Exception {
+		mockMvc.perform(get(getEndpoint(movieDTO.getId()))).andExpect(status().is5xxServerError());
 	}
 
 	@Test
 	@Order(7)
-	public void registerMovieFromCSVTest() {
-		String csvMock = "year;title;studios;producers;winner\n" +
-				"1800;Waterworld;Universal Pictures;Lawrence Gordon;\n" +
-				"1801;Barb Wire;PolyGram Filmed Entertainment;Todd Moyer;yes\n" +
-				"1802;Batman & Robin;Warner Bros.;Peter MacGregor-Scott;\n" +
-				"1812;Godzilla;TriStar Pictures;Dean Devlin;yes\n" +
-				"1817;Wild Wild West;Warner Bros.;Jon Peters;\n";
+	public void registerMovieFromCSVTest() throws Exception {
+		String csvMock = "year;title;studios;producers;winner\n"
+				+ "1800;Waterworld;Universal Pictures;Lawrence Gordon;\n"
+				+ "1801;Barb Wire;PolyGram Filmed Entertainment;Todd Moyer;yes\n"
+				+ "1802;Batman & Robin;Warner Bros.;Peter MacGregor-Scott;\n"
+				+ "1812;Godzilla;TriStar Pictures;Dean Devlin;yes\n" + "1817;Wild Wild West;Warner Bros.;Jon Peters;\n";
 
-		HttpHeaders httpHeaders = new HttpHeaders();
-		httpHeaders.setContentType(MediaType.MULTIPART_FORM_DATA);
+		MockMultipartFile file = new MockMultipartFile("file", "mock.csv", "text/csv", csvMock.getBytes());
 
-		MultiValueMap<String, Object> multiValueMap = new LinkedMultiValueMap<>();
-		multiValueMap.add("file", new ByteArrayResource(csvMock.getBytes()) {
-			@Override
-			public String getFilename() {
-				return "mock.csv";
-			}
-		});
+		MvcResult result = mockMvc.perform(multipart(getRegisterFromCSVEndpoint()).file(file))
+				.andExpect(status().isOk()).andReturn();
 
-		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(multiValueMap, httpHeaders);
+		MovieDTO[] movieDTOs = super.fromJson(result.getResponse().getContentAsString(), MovieDTO[].class);
+		assert(movieDTOs.length > 0);
 
-		ResponseEntity<MovieDTO[]> responseEntity = this.testRestTemplate.postForEntity(this.getRegisterFromCSVEndpoint(), requestEntity, MovieDTO[].class);
-		assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+		for (MovieDTO dto : movieDTOs) {
+			mockMvc.perform(get(getEndpoint(dto.getId()))).andExpect(status().isOk());
 
-		MovieDTO[] movieDTOsArray = responseEntity.getBody();
-		assert movieDTOsArray.length > 0;
-
-		for(MovieDTO movieDTO : movieDTOsArray) {
-			ResponseEntity<MovieDTO> movieCheckResponseEntity = this.testRestTemplate.getForEntity(this.getEndpoint(movieDTO.getId()), MovieDTO.class);
-			assertEquals(HttpStatus.OK, movieCheckResponseEntity.getStatusCode());
-
-			HttpHeaders headers = new HttpHeaders();
-			HttpEntity<Boolean> deleteRequestEntity = new HttpEntity<>(headers);
-			ResponseEntity<Boolean> deleteResponseEntity = this.testRestTemplate.exchange(this.getEndpoint(movieDTO.getId()), HttpMethod.DELETE, deleteRequestEntity, Boolean.class);
-
-			assertEquals(HttpStatus.OK, deleteResponseEntity.getStatusCode());
+			mockMvc.perform(delete(getEndpoint(dto.getId()))).andExpect(status().isOk());
 		}
 	}
 
-	public String getEndpoint() {
-		return super.getServerURL().append(MOVIES_ENDPOINT).toString();
+	private String getEndpoint() {
+		return MOVIES_ENDPOINT;
 	}
 
-	public String getEndpoint(Long id) {
-		return super.getServerURL().append(MOVIES_ENDPOINT).append("/").append(id).toString();
+	private String getEndpoint(Long id) {
+		return String.format(MOVIES_ENDPOINT + "/%d", id);
 	}
 
-	public String getRegisterFromCSVEndpoint() {
-		return super.getServerURL().append(MOVIES_ENDPOINT).append("/csv").toString();
+	private String getRegisterFromCSVEndpoint() {
+		return MOVIES_ENDPOINT + "/csv";
 	}
 }
