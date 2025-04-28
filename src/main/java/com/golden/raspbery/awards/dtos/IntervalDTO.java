@@ -78,6 +78,4 @@ public class IntervalDTO {
 		return "IntervalDTO [producerName=" + producerName + ", yearsInterval=" + yearsInterval + ", previousWinYear="
 				+ previousWinYear + ", followingWinYear=" + followingWinYear + "]";
 	}
-
-	
 }

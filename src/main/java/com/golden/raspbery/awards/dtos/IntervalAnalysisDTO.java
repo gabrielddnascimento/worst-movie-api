@@ -44,7 +44,6 @@ public class IntervalAnalysisDTO {
 
 	@Override
 	public String toString() {
-		return "IntervalAnalysisDTO [minIntervalsList=" + minIntervalsList + ", maxIntervalsList=" + maxIntervalsList
-				+ "]";
+		return "IntervalAnalysisDTO [minIntervalsList=" + minIntervalsList + ", maxIntervalsList=" + maxIntervalsList + "]";
 	}
 }
