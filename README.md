@@ -71,7 +71,7 @@ API RESTful para leitura da lista de indicados e vencedores da categoria **Pior 
 
 ## 🧪 Executando Testes de Integração
 
-Este projeto possui apenas **testes de integração**, ou seja, só irão retornar com sucesso caso o servidor esteja rodando.
+Este projeto possui apenas **testes de integração**, que já são rodados ao subir o docker ou rodar o comando `mvn clean package`.
 
 Ainda dentro da pasta do projeto será necessário rodar o seguinte comando para realizar somente os testes:
 ```bash
