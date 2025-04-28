@@ -41,4 +41,10 @@ public class IntervalAnalysisDTO {
 		return Objects.equals(maxIntervalsList, other.maxIntervalsList)
 				&& Objects.equals(minIntervalsList, other.minIntervalsList);
 	}
+
+	@Override
+	public String toString() {
+		return "IntervalAnalysisDTO [minIntervalsList=" + minIntervalsList + ", maxIntervalsList=" + maxIntervalsList
+				+ "]";
+	}
 }

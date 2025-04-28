@@ -73,5 +73,11 @@ public class IntervalDTO {
 				&& Objects.equals(producerName, other.producerName) && yearsInterval == other.yearsInterval;
 	}
 
+	@Override
+	public String toString() {
+		return "IntervalDTO [producerName=" + producerName + ", yearsInterval=" + yearsInterval + ", previousWinYear="
+				+ previousWinYear + ", followingWinYear=" + followingWinYear + "]";
+	}
+
 	
 }
