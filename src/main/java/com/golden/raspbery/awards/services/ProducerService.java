@@ -103,19 +103,39 @@ public class ProducerService {
 		}
 
 		List<IntervalDTO> intervalList = new ArrayList<>();
+
+		int actualMin = Integer.MAX_VALUE;
+		int actualMax = -1;
+
 		for (Map.Entry<String, List<Integer>> entry : winsByProducerMap.entrySet()) {
 			List<Integer> wonYearsList = entry.getValue();
 			for (int i = 1; i < wonYearsList.size(); i++) {
-				int interval = wonYearsList.get(i) - wonYearsList.get(i - 1);
-				intervalList.add(new IntervalDTO(entry.getKey(), interval, wonYearsList.get(i - 1), wonYearsList.get(i)));
+				int previousWinYear = wonYearsList.get(i - 1);
+				int followingWinYear = wonYearsList.get(i);
+
+				int interval = followingWinYear - previousWinYear;
+
+				if (interval > actualMin && interval < actualMax) {
+					continue;
+				}
+
+				if (interval < actualMin) {
+					actualMin = interval;
+				}
+
+				if (interval > actualMax) {
+					actualMax = interval;
+				}
+
+				intervalList.add(new IntervalDTO(entry.getKey(), interval, previousWinYear, followingWinYear));
 			}
 		}
 
-		int min = intervalList.stream().mapToInt(IntervalDTO::getYearsInterval).min().orElse(0);
-		int max = intervalList.stream().mapToInt(IntervalDTO::getYearsInterval).max().orElse(0);
+		int finalMin = actualMin;
+		int finalMax = actualMax;
 
-		List<IntervalDTO> minList = intervalList.stream().filter(i -> i.getYearsInterval() == min).collect(Collectors.toList());
-		List<IntervalDTO> maxList = intervalList.stream().filter(i -> i.getYearsInterval() == max).collect(Collectors.toList());
+		List<IntervalDTO> minList = intervalList.stream().filter(i -> i.getYearsInterval() == finalMin).collect(Collectors.toList());
+		List<IntervalDTO> maxList = intervalList.stream().filter(i -> i.getYearsInterval() == finalMax).collect(Collectors.toList());
 
 		IntervalAnalysisDTO intervalAnalysisDTO = new IntervalAnalysisDTO();
 		intervalAnalysisDTO.setMinIntervalsList(minList);
